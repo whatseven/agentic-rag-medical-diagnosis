@@ -21,7 +21,7 @@ def search_similar_diseases(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
     # Configuration
     host = "localhost"
     port = "19530"
-    api_token = "sk-uqdmjvjhiyggiznhihznibdgsnpjdwdscqfqrywpgolismns"
+    api_token = ""
     database_name = "llm_medication"
     collection_name = "medication2_en"  # 英文版本collection
     partition_name = "knowledge_base_en"
