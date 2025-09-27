@@ -38,7 +38,7 @@ def rerank_diseases(query_symptom, milvus_results):
         "documents": documents
     }
     headers = {
-        "Authorization": "Bearer sk-uqdmjvjhiyggiznhihznibdgsnpjdwdscqfqrywpgolismns",
+        "Authorization": "Bearer <>",
         "Content-Type": "application/json"
     }
     
