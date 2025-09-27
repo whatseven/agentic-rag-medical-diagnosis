@@ -1,0 +1,25 @@
+# Core dependencies
+requests>=2.31.0
+
+# OpenAI API client
+openai>=1.0.0
+
+# Vector database
+pymilvus>=2.5.0
+
+# Graph database  
+py2neo>=2021.2.4
+
+# Data processing and utilities
+tqdm>=4.65.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# JSON processing (faster JSON parsing)
+jiter>=0.5.0
+
+# Type hints
+typing-extensions>=4.7.0
+
+# Testing (optional)
+pytest>=7.4.0
