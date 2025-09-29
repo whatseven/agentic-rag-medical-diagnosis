@@ -1,7 +1,7 @@
 import sys
 import os
 
-# 添加src路径到系统路径，简化迭代，不用每次重新走流程，返回完整向量库信息，不根据analyzer进行过滤
+
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from src.model.rewrite_query import process_dialog_symptoms
@@ -140,7 +140,7 @@ def get_initial_diagnosis_data(user_input: str, model_name: str = None, top_k: i
             }
         
         # 步骤2: 重排序并截断到top5
-        rerank_top_k = 5  # 重排序后只保留前5个
+        rerank_top_k = 5  
         if not silent_mode:
             print(f"\n步骤2: 重排序并截断到top{rerank_top_k}...")
         reranked_results = rerank_diseases_with_topk(user_input, milvus_results, top_k=rerank_top_k)
@@ -230,7 +230,7 @@ def get_initial_diagnosis_data(user_input: str, model_name: str = None, top_k: i
 
 def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_list_file: str = None, silent_mode: bool = False) -> str:
     """
-    简化迭代的医疗诊断流程（改进重排序版本）：只获取一次数据，后续迭代仅重新调用doctor诊断
+   
     
     Args:
         user_input (str): 用户输入的症状描述
@@ -246,9 +246,9 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
     previous_suggestions = None  # 保存上一轮的诊断建议
     
     if not silent_mode:
-        print("=== 开始简化迭代的医疗诊断流程（改进重排序版本）===")
+        print("=== 开始医疗诊断流程===")
     
-    # 第一步：获取所有诊断数据（只执行一次）
+    # 第一步：获取所有诊断数据
     if not silent_mode:
         print(f"\n{'='*60}")
         print("获取诊断所需的基础数据...")
@@ -257,14 +257,14 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
     initial_data = get_initial_diagnosis_data(
         user_input=user_input,
         model_name=model_name,
-        top_k=5,  # 向量搜索top5，重排序后top5
+        top_k=5,  
         silent_mode=silent_mode
     )
     
     if not initial_data["success"]:
         return initial_data.get("error", "获取诊断数据失败")
     
-    # 准备R1评估需要的格式化字符串（只准备一次）
+    
     vector_results_str = ""
     for i, disease in enumerate(initial_data["vector_results"], 1):
         vector_results_str += f"{i}. {disease.get('name', 'Unknown')}\n"
@@ -276,8 +276,8 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
     for disease_name, disease_info in initial_data["graph_data"].items():
         graph_data_str += f"{disease_info}\n\n"
     
-    # 提取症状用于R1评估
-    symptoms_str = user_input  # 使用原始输入作为症状描述
+   
+    symptoms_str = user_input  
     
     if not silent_mode:
         print("基础数据获取完成，开始迭代诊断...")
@@ -292,7 +292,7 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
             print(f"{'='*60}")
         
         try:
-            # 调用doctor模块进行诊断（使用相同的数据）
+            # 调用doctor模块进行诊断
             if not silent_mode:
                 print("调用doctor模块进行诊断...")
             
@@ -308,7 +308,7 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
             if not silent_mode:
                 print(f"诊断完成: {diagnosis_result[:100]}...")
             
-            # R1专家评估
+           
             if not silent_mode:
                 print(f"\n{'='*40}")
                 print("R1专家评估诊断质量...")
@@ -323,12 +323,12 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
             )
             
             if not silent_mode:
-                print(f"R1专家评估结果: {'通过' if expert_review['is_correct'] else '驳回'}")
+                print(f"评估结果: {'通过' if expert_review['is_correct'] else '驳回'}")
             
             if expert_review["is_correct"]:
                 if not silent_mode:
                     print(f"\n{'='*60}")
-                    print("R1专家确认诊断正确，流程结束")
+                    print("诊断正确，流程结束")
                     print(f"{'='*60}")
                 return diagnosis_result
             else:
@@ -336,15 +336,15 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
                 # 提取诊断建议用于下轮重试
                 previous_suggestions = expert_review.get("diagnostic_suggestions")
                 if not silent_mode and previous_suggestions:
-                    print(f"R1专家建议：{previous_suggestions.get('recommended_diseases', [])}")
+                    print(f"建议：{previous_suggestions.get('recommended_diseases', [])}")
                 
-                if attempt == max_retries - 1:  # 这是最后一次尝试
+                if attempt == max_retries - 1:  
                     if not silent_mode:
-                        print("R1专家认为诊断有误，已达到最大重试次数，将启用R1直接诊断...")
-                    break  # 跳出循环，进入R1直接诊断
+                        print("诊断有误，已达到最大重试次数...")
+                    break  # 跳出循环
                 else:
                     if not silent_mode:
-                        print(f"R1专家认为诊断有误，准备第 {attempt + 2} 次重试...")
+                        print(f"诊断有误，准备第 {attempt + 2} 次重试...")
                 
         except Exception as e:
             if not silent_mode:
