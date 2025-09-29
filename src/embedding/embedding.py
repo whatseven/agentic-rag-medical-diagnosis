@@ -2,19 +2,10 @@ import requests
 import json
 
 def get_embedding(text: str, api_token: str) -> list:
-    """
-    使用Siliconflow API将给定的文本向量化。
 
-    Args:
-        text (str): 需要向量化的文本。
-        api_token (str): 用于Siliconflow API认证的Bearer Token。
-
-    Returns:
-        list: 文本的嵌入向量（4096维度），如果请求失败则返回空列表。
-    """
     url = "https://api.siliconflow.cn/v1/embeddings"
     
-    # 维度设置为4096
+    
     payload = {
         "model": "Qwen/Qwen3-Embedding-8B", 
         "input": text
@@ -27,7 +18,7 @@ def get_embedding(text: str, api_token: str) -> list:
 
     try:
         response = requests.post(url, json=payload, headers=headers)
-        response.raise_for_status()  # 如果请求失败（例如4xx或5xx错误），则抛出HTTPError
+        response.raise_for_status()  
 
         result = response.json()
         if "data" in result and len(result["data"]) > 0 and "embedding" in result["data"][0]:
@@ -52,10 +43,10 @@ def get_embedding(text: str, api_token: str) -> list:
         return []
 
 if __name__ == "__main__":
-    # 请替换为你的实际API Token
+    
     my_api_token = "" 
 
-    # 示例用法
+    
     text_to_embed = "Silicon flow embedding online: fast, affordable, and high-quality embedding services. come try it out!"
     embedding = get_embedding(text_to_embed, my_api_token)
 
