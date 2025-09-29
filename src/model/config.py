@@ -1,4 +1,4 @@
-# 大模型API配置
+
 MODELS = {
     "deepseek": {
         "api_key": "",
@@ -13,5 +13,5 @@ MODELS = {
 
 }
 
-# 默认使用的模型
+
 DEFAULT_MODEL = "deepseek"
