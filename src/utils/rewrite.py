@@ -5,16 +5,7 @@ from ..model.config import MODELS, DEFAULT_MODEL
 from ..model.prompt import SYMPTOM_REWRITE_PROMPT
 
 def call_symptom_api(dialog_text, model_name=None):
-    """
-    调用大模型API进行症状提取
-    
-    Args:
-        dialog_text (str): 输入的对话文本
-        model_name (str): 使用的模型名称
-    
-    Returns:
-        str: 模型的完整响应
-    """
+
     if model_name is None:
         model_name = DEFAULT_MODEL
     
@@ -41,15 +32,7 @@ def call_symptom_api(dialog_text, model_name=None):
     return response.choices[0].message.content
 
 def extract_symptoms_from_response(response_text):
-    """
-    从模型响应中提取症状信息
-    
-    Args:
-        response_text (str): 模型的完整响应
-    
-    Returns:
-        list: 提取的症状列表
-    """
+  
     pattern = r'<symptom>(.*?)</symptom>'
     match = re.search(pattern, response_text, re.DOTALL)
     
