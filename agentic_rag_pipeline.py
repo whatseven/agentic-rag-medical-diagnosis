@@ -24,12 +24,10 @@ def parse_neo4j_result(neo4j_text: str) -> dict:
     try:
         lines = neo4j_text.strip().split('\n')
         current_field = None
-        
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-                
             if line.startswith('疾病名称：'):
                 result['disease_name'] = line.replace('疾病名称：', '').strip()
             elif line.startswith('疾病病因：'):
@@ -42,42 +40,32 @@ def parse_neo4j_result(neo4j_text: str) -> dict:
                 current_field = 'complications'
                 result['complications'] = line.replace('并发症：', '').strip()
             elif current_field and line:
-                result[current_field] += line
-                
+                result[current_field] += line           
     except Exception as e:
         print(f"解析图数据库结果出错: {str(e)}")
-        
     return result
 
 def process_graph_data_with_simplified_cause(disease_name: str, neo4j_text: str, model_name: str = None) -> str:
     try:
         parsed_data = parse_neo4j_result(neo4j_text)
-        
         if not parsed_data['cause']:
             print(f"警告: 疾病 {disease_name} 没有病因信息")
             return ""
-        
         simplified_cause = rewrite_disease_cause(
             raw_cause=parsed_data['cause'],
             disease_name=disease_name,
             model_name=model_name
         )
-        
         if not simplified_cause:
             print(f"警告: 疾病 {disease_name} 病因简化失败，跳过该疾病")
             return ""
-        
         result_text = f"疾病名称：{disease_name}\n\n"
         result_text += f"疾病病因：{simplified_cause}\n\n"
-        
         if parsed_data['department']:
             result_text += f"治疗科室：{parsed_data['department']}\n\n"
-        
         if parsed_data['complications']:
             result_text += f"并发症：{parsed_data['complications']}\n\n"
-        
         return result_text.strip()
-        
     except Exception as e:
         print(f"处理疾病 {disease_name} 的图数据库信息出错: {str(e)}，跳过该疾病")
         return ""
@@ -87,13 +75,11 @@ def get_initial_diagnosis_data(user_input: str, model_name: str = None, top_k: i
         if not silent_mode:
             print("获取初始诊断数据...")
             print(f"用户输入: {user_input}")
-        
         if not silent_mode:
             print(f"\n步骤1: 向量搜索(top_k={top_k})...")
         milvus_results = search_similar_diseases(user_input, top_k=top_k)
         if not silent_mode:
             print(f"搜索到 {len(milvus_results)} 个疾病")
-        
         if not milvus_results:
             return {
                 "vector_results": [],
@@ -101,20 +87,17 @@ def get_initial_diagnosis_data(user_input: str, model_name: str = None, top_k: i
                 "success": False,
                 "error": "未找到相关疾病信息，请咨询专业医生。"
             }
-        
         rerank_top_k = 5  
         if not silent_mode:
             print(f"\n步骤2: 重排序并截断到top{rerank_top_k}...")
         reranked_results = rerank_diseases_with_topk(user_input, milvus_results, top_k=rerank_top_k)
         if not silent_mode:
             print(f"重排序完成，从{len(milvus_results)}个筛选到{len(reranked_results)}个结果")
-        
         if not silent_mode:
             print("\n步骤3: 分析诊断...")
         analysis_result = analyze_diagnosis(user_input, reranked_results, model_name)
         if not silent_mode:
             print(f"分析结果: {analysis_result}")
-        
         if 'error' in analysis_result:
             return {
                 "vector_results": reranked_results,
@@ -122,14 +105,11 @@ def get_initial_diagnosis_data(user_input: str, model_name: str = None, top_k: i
                 "success": False,
                 "error": analysis_result['error']
             }
-        
         need_more_info = analysis_result.get('need_more_info', False)
         target_diseases = analysis_result.get('diseases', [])
-        
         if need_more_info and target_diseases:
             if not silent_mode:
                 print(f"\n需要更多信息，目标疾病: {target_diseases}")
-            
             if not silent_mode:
                 print("\n步骤4: 图数据库查询和病因简化...")
             graph_data = {}
@@ -151,30 +131,22 @@ def get_initial_diagnosis_data(user_input: str, model_name: str = None, top_k: i
                 else:
                     if not silent_mode:
                         print(f"✗ 疾病 {disease_name} 未找到图数据库信息")
-            
-            
             filtered_results = reranked_results
-            
             if not silent_mode:
                 print(f"保留所有向量库结果: {len(filtered_results)} 个")
-                print(f"获取图数据库信息的疾病: {len(graph_data)} 个")
-            
+                print(f"获取图数据库信息的疾病: {len(graph_data)} 个") 
         else:
             if not silent_mode:
                 print("\n无需更多信息，直接使用重排序结果")
-            
             filtered_results = reranked_results
             graph_data = {}
-        
         if not silent_mode:
             print("\n初始数据获取完成!")
-        
         return {
             "vector_results": filtered_results,
             "graph_data": graph_data,
             "success": True
         }
-        
     except Exception as e:
         error_msg = f"获取初始诊断数据出错: {str(e)}"
         if not silent_mode:
@@ -185,51 +157,37 @@ def get_initial_diagnosis_data(user_input: str, model_name: str = None, top_k: i
             "success": False,
             "error": error_msg
         }
-
+        
 def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_list_file: str = None, silent_mode: bool = False) -> str:
-
     max_retries = 3
     rejection_count = 0  
     previous_suggestions = None  
-    
     if not silent_mode:
         print("=== 开始医疗诊断流程===")
-    
-  
     if not silent_mode:
         print(f"\n{'='*60}")
         print("获取诊断所需的基础数据...")
         print(f"{'='*60}")
-    
     initial_data = get_initial_diagnosis_data(
         user_input=user_input,
         model_name=model_name,
         top_k=5,  
         silent_mode=silent_mode
     )
-    
     if not initial_data["success"]:
         return initial_data.get("error", "获取诊断数据失败")
-    
-    
     vector_results_str = ""
     for i, disease in enumerate(initial_data["vector_results"], 1):
         vector_results_str += f"{i}. {disease.get('name', 'Unknown')}\n"
         vector_results_str += f"   描述：{disease.get('desc', 'No description')}\n"
         vector_results_str += f"   症状：{disease.get('symptom', 'No symptoms')}\n"
         vector_results_str += f"   相似度：{disease.get('similarity_score', 0):.3f}\n\n"
-    
     graph_data_str = ""
     for disease_name, disease_info in initial_data["graph_data"].items():
         graph_data_str += f"{disease_info}\n\n"
-    
-   
     symptoms_str = user_input  
-    
     if not silent_mode:
         print("基础数据获取完成，开始迭代诊断...")
-    
-    
     for attempt in range(max_retries):
         if not silent_mode:
             print(f"\n{'='*60}")
@@ -237,7 +195,6 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
             if previous_suggestions and not silent_mode:
                 print(f"使用上轮建议：{previous_suggestions.get('recommended_diseases', [])}")
             print(f"{'='*60}")
-        
         try:
             
             if not silent_mode:
@@ -254,8 +211,6 @@ def medical_diagnosis_pipeline(user_input: str, model_name: str = None, disease_
             
             if not silent_mode:
                 print(f"诊断完成: {diagnosis_result[:100]}...")
-            
-           
             if not silent_mode:
                 print(f"\n{'='*40}")
                 print("R1专家评估诊断质量...")
