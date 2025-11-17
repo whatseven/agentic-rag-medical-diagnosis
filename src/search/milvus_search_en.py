@@ -44,7 +44,7 @@ def search_similar_diseases(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         }
         request_2 = AnnSearchRequest(**search_param_2)
   
-        ranker = WeightedRanker(0.6, 0.4)
+        ranker = WeightedRanker(0.2, 0.8)
 
         results = client.hybrid_search(
             collection_name=collection_name,
