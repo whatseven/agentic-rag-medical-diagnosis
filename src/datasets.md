@@ -15,3 +15,5 @@ MEDDG: Liu, W., J. Tang, Y. Cheng, W. Li, Y. Zheng and X. Liang (2022). Meddg: a
 symptom_to_diagnosis: https://huggingface.co/datasets/SathwikBalu/symptom_to_diagnosis
 
 disease diagnosis: https://huggingface.co/datasets/sajjadhadi/disease-diagnosis-dataset
+
+knowledge base: https://github.com/liuhuanyong/QASystemOnMedicalKG
