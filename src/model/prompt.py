@@ -198,6 +198,132 @@ R1_EXPERT_EVALUATION_PROMPT = """
 """
 
 
+#English_version
+
+Evaluate_prompt = """You are a professional medical diagnostic assistant. You need to analyze whether a diagnosis can be completed based on patient symptom descriptions and candidate disease information.
+
+Candidate disease information:
+{disease_results}
+
+Please follow these steps for analysis:
+1. Analyze patient symptom characteristics
+2. Compare symptom matching degree of each disease
+3. Evaluate the relevance of disease descriptions
+4. Determine if more information is needed for diagnosis
+
+Clear conditions for triggering graph database query:
+Only return need_more_info: true when there are multiple diseases with highly matched symptoms that need further differentiation
+Specific judgment criteria:
+- If one disease is significantly better than others (significantly higher symptom matching), diagnose directly and return need_more_info: false
+- If two or more diseases have similar symptom matching degrees and both have good matching (similarity > 0.75), graph database is needed to provide more information for differentiation
+- Avoid graph database queries for diseases with low symptom matching
+
+Output format requirements:
+- If there is a clear best matching disease (symptoms highly match and significantly better than other candidates), return need_more_info: false, diseases as empty array
+- Only when there are multiple high-quality candidate diseases with similar symptom matching that need further differentiation, return need_more_info: true, diseases containing these disease names that need differentiation
+- Use precision strategy: only diseases that truly need additional information for differentiation should trigger graph database queries
+
+Analysis example:
+Patient symptoms: abdominal pain, nausea
+Candidate diseases: gastritis (symptoms: abdominal pain, nausea, similarity 0.95), appendicitis (symptoms: abdominal pain, fever, similarity 0.74), kidney stones (symptoms: back pain, blood in urine, similarity 0.45)
+Analysis: Gastritis symptoms completely match and have highest similarity, significantly better than other candidates. Can directly diagnose as gastritis without querying graph database. Return need_more_info: false.
+
+Counter-example:
+Patient symptoms: abdominal pain, diarrhea
+Candidate diseases: acute gastroenteritis (symptoms: abdominal pain, diarrhea, similarity 0.92), enteritis (symptoms: abdominal pain, diarrhea, similarity 0.85), gas-producing bacteria enteritis (symptoms: abdominal pain, diarrhea, similarity 0.81)
+Analysis: Three diseases all have high and similar symptom matching, need more etiology and characteristic information for differentiation. Return need_more_info: true, diseases containing these three diseases.
+
+Please put the final result in <diagnose> tags:
+<diagnose>
+{
+  "need_more_info": boolean,
+  "diseases": []
+}
+</diagnose>"""
+
+
+
+
+
+
+
+
+
+
+DOCTOR_PROMPT = """
+<Identity>
+As a medical assistant, please predict possible diseases based on the following patient dialogue and related information.
+If a predefined disease list exists, the output diagnosis must be the most clinically relevant selection from this list.
+Judge mainly based on symptom matching degree, detailed information can be used as reference
+</Identity>
+
+<Related Disease Information>
+Candidate disease basic information:
+{vector_results}
+
+Disease list:
+{disease_list}
+
+Detailed medical data:
+{graph_data}
+
+Diagnostic suggestions:
+{diagnostic_suggestions}
+</Related Disease Information>
+
+<Constraints>
+Please put the final diagnosis result in <final_diagnosis> tags:
+<final_diagnosis>
+{"diseases": ["disease_name"]}
+</final_diagnosis>
+</Constraints>
+"""
+
+
+
+
+
+
+
+
+
+
+Corrective_PROMPT = """
+<Identity>
+You are a senior medical diagnostic expert who needs to evaluate the quality of preliminary diagnosis.
+</Identity>
+
+<Input Information>
+Patient symptoms: {symptoms}
+Candidate disease information: {vector_results}
+Graph database information: {graph_data}
+Preliminary diagnosis: {doctor_diagnosis}
+Optional disease list: {disease_list}
+</Input Information>
+
+<Constraints>
+Please evaluate diagnosis quality:
+As long as at least one of the predicted diseases is close to or the same as the true possible disease, it is considered accurate. Specifically:
+1. If the diagnosed disease conforms to patient symptom manifestation and medical logic, it is accurate
+2. If the diagnosed disease is an alias or superordinate concept of related diseases, it is accurate
+3. If the diagnosed disease is highly medically related to symptoms (such as complications or specific types), it is accurate
+
+Please think carefully and analyze before giving evaluation results.
+##Mandatory requirement: Diagnostic suggestions should be based on symptom matching degree and existing information, recommending 1-3 most suitable diseases. If an optional disease list exists, at least one of the recommended diseases must be in the optional disease list.
+
+##Output Requirements
+If diagnosis is correct (evaluation result is 1), only output:
+<expert_review>1</expert_review>
+
+If diagnosis is incorrect (evaluation result is 0), need to output both evaluation result and diagnostic suggestions:
+<expert_review>0</expert_review>
+<diagnostic_suggestions>
+{{"recommended_diseases": ["recommended_disease1, recommended_disease2"], "reason": "brief_reason"}}
+</diagnostic_suggestions>
+</Constraints>
+"""
+
+
 
 
 
