@@ -15,6 +15,5 @@ python insert.py
 Edit `src/model/config.py` to add your preferred models
 
 
-
-
+For hallucination analysis, please refers to https://github.com/jlko/semantic_uncertainty
 
